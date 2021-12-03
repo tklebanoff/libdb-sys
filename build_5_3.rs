@@ -31,7 +31,7 @@ pub fn build_unix(out_dir: &str) {
         use std::process::Stdio;
 
         let mut child = Command::new("patch")
-            .arg("src/dbinc/atomc.h")
+            .arg("src/dbinc/atomic.h")
             .stdin(Stdio::piped())
             .spawn().unwrap();
 
