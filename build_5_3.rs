@@ -16,6 +16,42 @@ pub fn build_unix(out_dir: &str) {
         .arg(copy_dir.to_str().unwrap())
         .status()
         .unwrap();
+    
+      //get patch
+    Command::new("curl")
+        .arg("-OL")
+        .arg("https://raw.github.com/narkoleptik/os-x-berkeleydb-patch/master/atomic.patch")
+        .status()
+        .unwrap();
+
+    //apply patch
+    {
+        use std::io::{Read,Write};
+        use std::fs::File;
+        use std::process::Stdio;
+
+        let mut child = Command::new("patch")
+            .arg("src/dbinc/atomc.h")
+            .stdin(Stdio::piped())
+            .spawn().unwrap();
+
+        let mut f = File::open("atomic.patch").unwrap();
+
+        let mut buffer = Vec::new();
+
+        // read the whole file
+        f.read_to_end(&mut buffer).unwrap();
+
+        let child_stdin = child.stdin.as_mut().unwrap();
+        child_stdin.write_all(&buffer).unwrap();
+
+        // Close stdin to finish and avoid indefinite blocking
+        drop(child_stdin);
+
+        let output = child.wait_with_output().unwrap();
+    }
+
+
 
     // build
     Command::new("../dist/configure")
